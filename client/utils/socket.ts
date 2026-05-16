@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { Platform } from 'react-native';
 
-const SERVER_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+const SERVER_URL = 'https://pippogram-production.up.railway.app';
 
 class SocketManager {
   private socket: Socket | null = null;
