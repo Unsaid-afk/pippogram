@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Pippogram",
+    "slug": "pippogram",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": null,
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0F0F13"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pippogram.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Pippogram needs your microphone for push-to-talk audio.",
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0F0F13"
+      },
+      "package": "com.pippogram.app",
+      "permissions": [
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "FOREGROUND_SERVICE",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": null,
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Pippogram needs your microphone for push-to-talk."
+        }
+      ]
+    ]
+  }
+}

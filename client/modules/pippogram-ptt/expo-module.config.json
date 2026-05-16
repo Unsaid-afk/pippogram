@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["PippogramPttModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.pippogramptt.PippogramPttModule"]
+  }
+}

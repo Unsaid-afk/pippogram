@@ -1,0 +1,25 @@
+{
+  "name": "pippogram-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "EchoVibe Signaling Server",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "npx ts-node src/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.10",
+    "fastify": "^4.26.2",
+    "ioredis": "^5.4.1",
+    "pg": "^8.11.5",
+    "socket.io": "^4.7.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "drizzle-kit": "^0.20.14",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
