@@ -4,18 +4,22 @@
     "slug": "pippogram",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": null,
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "backgroundColor": "#0F0F13"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pippogram.app",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Pippogram needs your microphone for push-to-talk audio.",
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -28,7 +32,8 @@
         "VIBRATE",
         "FOREGROUND_SERVICE",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -42,6 +47,11 @@
           "microphonePermission": "Pippogram needs your microphone for push-to-talk."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0a07bf09-270e-47d7-9fdc-08fdb3a5e6e0"
+      }
+    }
   }
 }
