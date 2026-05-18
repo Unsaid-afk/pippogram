@@ -173,6 +173,42 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 4. PIP-PAD WIDGET EVENTS
+  socket.on('doodle_send', ({ toUserId, vectorData }) => {
+    io.to(`user:${toUserId}`).emit('doodle_incoming', {
+      from: userId,
+      vectorData,
+    });
+  });
+
+  socket.on('doodle_exposed', ({ toUserId }) => {
+    // Start server-side 10-second self-destruct countdown
+    let timeLeft = 10;
+    const timer = setInterval(() => {
+      timeLeft -= 1;
+      io.to(`user:${userId}`).to(`user:${toUserId}`).emit('doodle_tick', {
+        timeLeft,
+      });
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        io.to(`user:${userId}`).to(`user:${toUserId}`).emit('doodle_vanished');
+      }
+    }, 1000);
+  });
+
+  // 5. GAMIFIED PIP POINTS
+  const userPoints = new Map<string, number>();
+  socket.on('points_award', ({ points, activityType }) => {
+    const currentPoints = userPoints.get(userId) || 0;
+    const newPoints = currentPoints + points;
+    userPoints.set(userId, newPoints);
+    io.to(`user:${userId}`).emit('points_updated', {
+      points: newPoints,
+      activityType,
+    });
+  });
+
   // Cleanup on disconnect
   socket.on('disconnect', () => {
     console.log(`[-] User disconnected: ${userId}`);
