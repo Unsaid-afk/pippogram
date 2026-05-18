@@ -209,6 +209,21 @@ io.on('connection', (socket) => {
     });
   });
 
+  // 6. REAL-TIME FRIEND RELATIONSHIPS
+  socket.on('friend_request', ({ toUsername }) => {
+    console.log(`[Friend Request] From ${userId} to ${toUsername}`);
+    io.to(`user:${toUsername}`).emit('incoming_friend_request', {
+      from: userId,
+    });
+  });
+
+  socket.on('friend_accept', ({ toUsername }) => {
+    console.log(`[Friend Accept] ${userId} accepted ${toUsername}`);
+    io.to(`user:${toUsername}`).emit('friend_request_accepted', {
+      from: userId,
+    });
+  });
+
   // Cleanup on disconnect
   socket.on('disconnect', () => {
     console.log(`[-] User disconnected: ${userId}`);
