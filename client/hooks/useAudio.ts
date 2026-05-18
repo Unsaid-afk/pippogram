@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 let Audio: any = null;
 try {
@@ -61,20 +62,37 @@ export const useAudio = () => {
     }
   }, [recording]);
 
-  const playAudio = useCallback(async (uri: string) => {
+  const playAudio = useCallback(async (audioSource: string) => {
     if (!Audio) return;
 
     try {
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
+      let playUri = audioSource;
+
+      // If the incoming audio is base64 data URL
+      if (audioSource.startsWith('data:') && audioSource.includes('base64,')) {
+        const base64Data = audioSource.split('base64,')[1];
+        const tempUri = `${FileSystem.cacheDirectory}incoming_voice_${Date.now()}.m4a`;
+        await FileSystem.writeAsStringAsync(tempUri, base64Data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        playUri = tempUri;
       }
-      const { sound } = await Audio.Sound.createAsync({ uri });
+
+      if (soundRef.current) {
+        try { await soundRef.current.unloadAsync(); } catch {}
+      }
+      
+      const { sound } = await Audio.Sound.createAsync({ uri: playUri });
       soundRef.current = sound;
       
       sound.setOnPlaybackStatusUpdate((status: any) => {
         if (status.didJustFinish) {
-          sound.unloadAsync();
+          sound.unloadAsync().catch(() => {});
           soundRef.current = null;
+          // Safely delete the temporary cached file
+          if (playUri.startsWith(FileSystem.cacheDirectory)) {
+            FileSystem.deleteAsync(playUri, { idempotent: true }).catch(() => {});
+          }
         }
       });
 

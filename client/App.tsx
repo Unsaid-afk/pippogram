@@ -9,6 +9,7 @@ import {
   ScrollView,
   Dimensions,
   Platform,
+  Vibration,
 } from 'react-native';
 import { PttButton } from './components/PttButton';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +17,8 @@ import { socketManager } from './utils/socket';
 import { useAudio } from './hooks/useAudio';
 import { initializePttFramework, startForegroundService } from './modules/pippogram-ptt';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +44,7 @@ export default function App() {
   const [potatoData, setPotatoData] = useState<{ timeLeft: number; holder: string } | null>(null);
   const [context, setContext] = useState<string>('active');
   const [connected, setConnected] = useState(false);
+  const [pokeFrom, setPokeFrom] = useState<string | null>(null);
   
   const { startRecording, stopRecording, playAudio } = useAudio();
 
@@ -48,8 +52,22 @@ export default function App() {
     setMessages(prev => [{ id: Date.now().toString() + Math.random(), text, type }, ...prev].slice(0, 5));
   }, []);
 
-  // Initialize native PTT (safe no-op if unavailable)
+  // Initialize native PTT and request permissions on first install/launch
   useEffect(() => {
+    async function requestAllPermissions() {
+      try {
+        const { status } = await Audio.requestPermissionsAsync();
+        if (status === 'granted') {
+          addMessage('🎙️ Mic permission granted!', 'info');
+        } else {
+          addMessage('⚠️ Mic permission denied! Talk won\'t work.', 'error');
+        }
+      } catch (err) {
+        console.error('Failed to request microphone permission:', err);
+      }
+    }
+
+    requestAllPermissions();
     try { initializePttFramework(); } catch {}
     try { startForegroundService(); } catch {}
   }, []);
@@ -97,6 +115,13 @@ export default function App() {
 
     socket.on('incoming_poke', (data: any) => {
       addMessage(`👆 Poked by ${data.from}!`, 'info');
+      try {
+        Vibration.vibrate([0, 300, 100, 300]);
+      } catch {}
+      setPokeFrom(data.from);
+      setTimeout(() => {
+        setPokeFrom(curr => curr === data.from ? null : curr);
+      }, 5000);
     });
 
     socket.on('potato_started', (data: any) => {
@@ -149,7 +174,15 @@ export default function App() {
     const uri = await stopRecording();
     const socket = socketManager.getSocket();
     if (uri && socket) {
-      socket.emit('ptt_audio', { toUserId: targetUserId, audioData: uri });
+      try {
+        const base64Audio = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const audioDataUrl = `data:audio/x-m4a;base64,${base64Audio}`;
+        socket.emit('ptt_audio', { toUserId: targetUserId, audioData: audioDataUrl });
+      } catch (err) {
+        console.error('Failed to read audio file as base64:', err);
+      }
     }
     socket?.emit('ptt_stop', { toUserId: targetUserId });
   };
@@ -195,6 +228,28 @@ export default function App() {
             </Animated.View>
           )}
         </View>
+
+        {/* Animated Poke Notification Banner */}
+        {pokeFrom && (
+          <Animated.View 
+            entering={FadeIn.duration(300)} 
+            exiting={FadeOut.duration(300)} 
+            style={styles.notificationBanner}
+          >
+            <Text style={styles.notificationText}>👆 <Text style={{fontWeight: 'bold', color: '#FFF'}}>{pokeFrom}</Text> poked you!</Text>
+            <TouchableOpacity 
+              style={styles.pokeBackBtn} 
+              onPress={() => {
+                setTargetUserId(pokeFrom);
+                socketManager.getSocket()?.emit('poke', { toUserId: pokeFrom });
+                addMessage(`Poked back ${pokeFrom}`, 'info');
+                setPokeFrom(null);
+              }}
+            >
+              <Text style={styles.pokeBackBtnText}>POKE BACK</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Hot Potato Banner */}
@@ -525,5 +580,49 @@ const styles = StyleSheet.create({
   messageText: {
     color: '#BBB',
     fontSize: 13,
+  },
+  notificationBanner: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 100 : 70,
+    left: 24,
+    right: 24,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  notificationText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+  },
+  pokeBackBtn: {
+    backgroundColor: '#FFF',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginLeft: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  pokeBackBtnText: {
+    color: '#8B5CF6',
+    fontWeight: '900',
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
 });
