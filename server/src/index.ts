@@ -20,6 +20,56 @@ const io = new Server(fastify.server, {
 const potatoSessions = new Map<string, { holder: string; timer: NodeJS.Timeout; timeLeft: number }>();
 const streaks = new Map<string, number>();
 
+// Root / landing endpoint for friendly checks
+fastify.get('/', async (request, reply) => {
+  reply.type('text/html').send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pippogram Signaling Server</title>
+        <style>
+          body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0F0F13;
+            color: #E4E4E7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+          }
+          .container {
+            text-align: center;
+            padding: 2.5rem;
+            background: #18181B;
+            border-radius: 16px;
+            border: 1px solid #27272A;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          }
+          h1 {
+            color: #8B5CF6;
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+          }
+          p {
+            color: #A1A1AA;
+            margin: 0;
+            font-size: 1rem;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>🚀 Pippogram Backend</h1>
+          <p>Signaling server is online and operational.</p>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
 // Health-check endpoint
 fastify.get('/health', async () => ({ status: 'ok', uptime: process.uptime() }));
 
